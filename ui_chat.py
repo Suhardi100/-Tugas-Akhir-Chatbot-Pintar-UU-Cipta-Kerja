@@ -1,81 +1,58 @@
 import streamlit as st
-from app import agent_main  # import fungsi utama dari app.py (misalnya agent_main(question))
+import datetime
+import app  # ⬅️ memanggil semua definisi dari app.py tanpa import fungsi tertentu
 
-# ----------------------------
-# SETTING TAMPILAN
-# ----------------------------
-st.set_page_config(
-    page_title="Indonesian Legal Assistant",
-    page_icon="⚖️",
-    layout="wide"
-)
+# ================================
+# 💬 UI Chatbot Style
+# ================================
+st.set_page_config(page_title="Chatbot UU Cipta Kerja 🇮🇩", layout="wide")
 
-# CSS agar mirip ChatGPT
 st.markdown("""
-    <style>
-    .chat-message {
-        padding: 12px 20px;
-        border-radius: 12px;
-        margin-bottom: 10px;
-        max-width: 80%;
-    }
-    .user-message {
-        background-color: #DCF8C6;
-        align-self: flex-end;
-        text-align: right;
-    }
-    .bot-message {
-        background-color: #F1F0F0;
-        align-self: flex-start;
-        text-align: left;
-    }
-    .chat-container {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        margin-bottom: 80px;
-    }
-    </style>
+<h2 style='text-align: center;'>🤖 Chatbot UU Cipta Kerja (Agentic RAG)</h2>
+<p style='text-align: center;'>Tanyakan apa pun seputar UU No. 11 Tahun 2020 tentang Cipta Kerja</p>
+<hr>
 """, unsafe_allow_html=True)
 
-# ----------------------------
-# STATE UNTUK CHAT HISTORY
-# ----------------------------
+# Simpan riwayat chat di session state
 if "messages" not in st.session_state:
-    st.session_state["messages"] = []
+    st.session_state.messages = []
 
-st.title("⚖️ Legal Research Assistant (Indonesia)")
-st.markdown("Tanyakan apapun tentang hukum Indonesia, undang-undang, atau putusan pengadilan.")
+# Tampilkan riwayat chat
+for msg in st.session_state.messages:
+    role, text, time = msg["role"], msg["text"], msg["time"]
+    with st.chat_message(role):
+        st.markdown(f"**{role.upper()} ({time})**")
+        st.write(text)
 
-# ----------------------------
-# TAMPILKAN CHAT
-# ----------------------------
-chat_container = st.container()
-with chat_container:
-    for msg in st.session_state["messages"]:
-        if msg["role"] == "user":
-            st.markdown(f'<div class="chat-message user-message">{msg["content"]}</div>', unsafe_allow_html=True)
-        else:
-            st.markdown(f'<div class="chat-message bot-message">{msg["content"]}</div>', unsafe_allow_html=True)
+# Input chat
+prompt = st.chat_input("Ketik pertanyaan hukum Anda di sini...")
 
-# ----------------------------
-# INPUT BAWAH
-# ----------------------------
-user_input = st.chat_input("Ketik pertanyaan hukum Anda...")
+if prompt:
+    # Tambahkan pesan user
+    current_time = datetime.datetime.now().strftime("%H:%M:%S")
+    st.session_state.messages.append({"role": "user", "text": prompt, "time": current_time})
 
-if user_input:
-    # Tambahkan pertanyaan ke history
-    st.session_state["messages"].append({"role": "user", "content": user_input})
+    with st.chat_message("user"):
+        st.markdown(f"**USER ({current_time})**")
+        st.write(prompt)
 
-    # Jalankan logika utama dari app.py
-    try:
-        with st.spinner("Sedang menganalisis..."):
-            bot_response = agent_main(user_input)  # Fungsi dari app.py
-    except Exception as e:
-        bot_response = f"⚠️ Terjadi kesalahan: {str(e)}"
+    # Jalankan Agentic RAG dari app.py
+    with st.chat_message("assistant"):
+        with st.spinner("Sedang menganalisis dengan Agentic RAG..."):
+            try:
+                state = {"question": prompt}
+                result = app.runnable_graph.invoke(state)
+                answer = result.get("answer", "Tidak ada jawaban ditemukan.")
+                reasoning = result.get("reasoning", "")
+                response_text = f"{answer}\n\n🧠 **Analisis Tools:** {reasoning}"
+            except Exception as e:
+                response_text = f"⚠️ Terjadi kesalahan: {e}"
 
-    # Tambahkan jawaban ke history
-    st.session_state["messages"].append({"role": "assistant", "content": bot_response})
-
-    # Refresh tampilan
-    st.rerun()
+            current_time = datetime.datetime.now().strftime("%H:%M:%S")
+            st.session_state.messages.append({
+                "role": "assistant",
+                "text": response_text,
+                "time": current_time
+            })
+            st.markdown(f"**ASSISTANT ({current_time})**")
+            st.write(response_text)
