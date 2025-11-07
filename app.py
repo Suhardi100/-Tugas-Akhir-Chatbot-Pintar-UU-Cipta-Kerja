@@ -160,7 +160,7 @@ def enhanced_generation_node(state: AgentState) -> AgentState:
     Pertanyaan: {q}
     Konteks: {context}
 
-    Jawab dengan bahasa Indonesia formal, dan sebutkan sumber (UU, Wikipedia, Tavily, dll).
+    Jawablah dengan mengutamakan yang ada di dokumen tersebut dengan bahasa Indonesia formal, dan sebutkan sumber (UU, Wikipedia, Tavily, dll).
     """
     res = llm.invoke(prompt)
     return {**state, "answer": res.content.strip()}
