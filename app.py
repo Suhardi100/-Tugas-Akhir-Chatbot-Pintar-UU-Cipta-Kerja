@@ -24,7 +24,7 @@ os.environ["LANGCHAIN_PROJECT"] = "UU-CiptaKerja-AgenticRAG"
 # ================================
 llm = ChatGoogleGenerativeAI(
     model="gemini-2.0-flash-lite",
-    temperature=0.1,
+    temperature=0.5,
     google_api_key="AIzaSyA-d2ZH44cAZrqxN7MwNirQlLEE5SaQYtc"
 )
 
