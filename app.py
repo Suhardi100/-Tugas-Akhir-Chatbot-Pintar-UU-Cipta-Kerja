@@ -79,7 +79,7 @@ class AgentState(TypedDict):
 def tool_selection_node(state: AgentState) -> AgentState:
     q = state["question"]
     prompt = f"""
-    Kamu adalah asisten hukum cerdas. Tentukan tools terbaik untuk menjawab pertanyaan berikut:
+    Kamu adalah asisten ahli UU Cipta Kerja yang sangat cerdas setara 100 profesor. Tentukan tools terbaik untuk menjawab pertanyaan berikut:
 
     Pertanyaan: {q}
 
@@ -90,10 +90,10 @@ def tool_selection_node(state: AgentState) -> AgentState:
     4. PDF_Documents - dokumen UU Cipta Kerja
 
     Analisis:
-    - Apakah tentang hukum terkini Indonesia? → TavilySearch
-    - Apakah teori hukum akademik? → arXiv
-    - Apakah konsep hukum dasar? → Wikipedia
-    - Apakah isi UU Cipta Kerja? → PDF_Documents
+    - Apakah ada referensi tentang UU Cipta Kerja terkini Indonesia? → TavilySearch
+    - Apakah teori akademik yang berkenaan UU Cipta Kerja di Indonesia? → arXiv
+    - Apakah konsep dasar UU Cipta Kerja? → Wikipedia
+    - Apakah isi UU Cipta Kerja setiap pasalnya? → PDF_Documents
 
     Format:
     TOOLS: tool1,tool2
@@ -136,12 +136,12 @@ def enhanced_grade_node(state: AgentState) -> AgentState:
     q = state["question"]
     all_docs = state.get("docs", []) + state.get("external_docs", [])
     prompt = f"""
-    Evaluasi relevansi dokumen berikut untuk pertanyaan hukum ini:
+    Evaluasi relevansi dokumen berikut untuk pertanyaan UU Cipta Kerja ini:
 
     Pertanyaan: {q}
     Dokumen: {all_docs}
 
-    Apakah cukup relevan untuk menjawab pertanyaan? (ya/tidak)
+    Apakah sangat relevan untuk menjawab pertanyaan? (ya/tidak)
     """
     res = llm.invoke(prompt)
     return {**state, "relevant": "ya" in res.content.lower()}
@@ -154,7 +154,7 @@ def enhanced_generation_node(state: AgentState) -> AgentState:
     q = state["question"]
     context = "\n".join(state.get("docs", []) + state.get("external_docs", []))
     prompt = f"""
-    Kamu adalah asisten hukum ahli Indonesia.
+    Kamu adalah asisten ahli UU Cipta Kerja di Indonesia.
     Gabungkan informasi dari berbagai sumber berikut untuk menjawab pertanyaan secara komprehensif.
 
     Pertanyaan: {q}
@@ -172,7 +172,7 @@ def enhanced_generation_node(state: AgentState) -> AgentState:
 def answer_check_node(state: AgentState) -> AgentState:
     q = state["question"]
     ans = state.get("answer", "")
-    prompt = f"Apakah jawaban ini sudah menjawab pertanyaan?\nPertanyaan: {q}\nJawaban: {ans}\nBalas hanya 'ya' atau 'tidak'."
+    prompt = f"Apakah jawaban ini sudah sangat menjawab pertanyaan?\nPertanyaan: {q}\nJawaban: {ans}\nBalas hanya 'ya' atau 'tidak'."
     res = llm.invoke(prompt)
     return {**state, "answered": "ya" in res.content.lower()}
 
