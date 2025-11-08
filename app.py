@@ -33,23 +33,23 @@ llm = ChatGoogleGenerativeAI(
 # ================================
 wikipedia_tool = WikipediaQueryRun(api_wrapper=WikipediaAPIWrapper(lang="id"))
 arxiv_tool = ArxivQueryRun(api_wrapper=ArxivAPIWrapper())
-tavily_tool_instance = TavilySearchResults(k=1)
+tavily_tool_instance = TavilySearchResults(k=3)
 
 tools = {
     "Wikipedia": Tool(
         name="Wikipedia",
         func=wikipedia_tool.run,
-        description="Gunakan untuk konsep hukum umum atau istilah legal dalam Bahasa Indonesia"
+        description="Gunakan untuk konsep UU Cipta kerja atau istilah yang berkaitan dengan UU Cipta Kerja dalam Bahasa Indonesia"
     ),
     "arXiv": Tool(
         name="arXiv",
         func=arxiv_tool.run,
-        description="Gunakan untuk referensi akademik tentang hukum, teori, dan penelitian"
+        description="Gunakan untuk referensi akademik tentang teori dan penelitian berkaitan UU Cipta Kerja"
     ),
     "TavilySearch": Tool(
         name="TavilySearch",
         func=tavily_tool_instance.run,
-        description="Gunakan untuk berita hukum terbaru, peraturan Indonesia, dan putusan pengadilan"
+        description="Gunakan untuk berita UU Cipta Kerja terbaru, peraturan Indonesia, dan putusan pengadilan"
     )
 }
 
