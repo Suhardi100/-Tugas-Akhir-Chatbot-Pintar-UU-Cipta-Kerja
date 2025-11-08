@@ -50,11 +50,6 @@ tools = {
         name="TavilySearch",
         func=tavily_tool_instance.run,
         description="Gunakan untuk berita UU Cipta Kerja terbaru, peraturan Indonesia, dan putusan pengadilan"
-    ),
-    Tool(
-        name="IndoLocalDocs",
-        func=lambda q: indo_doc_search("docs/uu_cipta_kerja.pdf", q),
-        description="Gunakan untuk menjawab pertanyaan dari dokumen yang berkaitan dengan UU Cipta Kerja di Indonesia (PDF/DOCX lokal)."
     )
 }
 
