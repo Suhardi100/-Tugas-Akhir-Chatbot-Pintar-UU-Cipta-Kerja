@@ -24,7 +24,7 @@ os.environ["LANGCHAIN_PROJECT"] = "UU-CiptaKerja-AgenticRAG"
 # ================================
 llm = ChatGoogleGenerativeAI(
     model="gemini-2.0-flash-lite",
-    temperature=0.5,
+    temperature=0.1,
     google_api_key="AIzaSyA-d2ZH44cAZrqxN7MwNirQlLEE5SaQYtc"
 )
 
@@ -33,7 +33,7 @@ llm = ChatGoogleGenerativeAI(
 # ================================
 wikipedia_tool = WikipediaQueryRun(api_wrapper=WikipediaAPIWrapper(lang="id"))
 arxiv_tool = ArxivQueryRun(api_wrapper=ArxivAPIWrapper())
-tavily_tool_instance = TavilySearchResults(k=3)
+tavily_tool_instance = TavilySearchResults(k=1)
 
 tools = {
     "Wikipedia": Tool(
