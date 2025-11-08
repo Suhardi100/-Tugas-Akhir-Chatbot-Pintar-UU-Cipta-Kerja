@@ -2,7 +2,7 @@ import os
 import streamlit as st
 from typing import TypedDict, List, Optional
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_community.document_loaders import PyPDFLoader
+from langchain_community.document_loaders import PyPDFLoader, TextLoader
 from langchain.tools import Tool
 from langchain_community.tools.wikipedia.tool import WikipediaQueryRun
 from langchain_community.tools.arxiv.tool import ArxivQueryRun
@@ -56,7 +56,7 @@ tools = {
 # ================================
 # 📚 Load Dokumen UU Cipta Kerja
 # ================================
-loader = PyPDFLoader("uu_ciptakerja.txt")
+loader = TextLoader("uu_ciptakerja.txt", encoding='utf-8')
 documents = loader.load()
 
 # ================================
