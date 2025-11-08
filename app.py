@@ -33,7 +33,7 @@ llm = ChatGoogleGenerativeAI(
 # ================================
 wikipedia_tool = WikipediaQueryRun(api_wrapper=WikipediaAPIWrapper(lang="id"))
 arxiv_tool = ArxivQueryRun(api_wrapper=ArxivAPIWrapper())
-tavily_tool_instance = TavilySearchResults(k=1)
+tavily_tool_instance = TavilySearchResults(k=3)
 
 tools = {
     "Wikipedia": Tool(
