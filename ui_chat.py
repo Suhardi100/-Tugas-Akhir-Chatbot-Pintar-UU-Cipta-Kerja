@@ -17,13 +17,10 @@ st.set_page_config(
 # ================================
 st.markdown("""
 <style>
-/* Background utama */
 .stApp {
     background: linear-gradient(135deg, #0f5132 0%, #198754 100%);
     color: white !important;
 }
-
-/* Kontainer utama chat */
 .chat-container {
     background-color: rgba(255, 255, 255, 0.10);
     border-radius: 16px;
@@ -31,22 +28,17 @@ st.markdown("""
     margin-top: 20px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
 }
-
-/* Header */
 h2 {
     color: #d1f7c4 !important;
     text-align: center;
     font-weight: 700;
     font-family: "Segoe UI", sans-serif;
 }
-
 p.subtitle {
     text-align: center;
     font-size: 16px;
     color: #e7ffe0;
 }
-
-/* Chat bubble styling */
 .chat-bubble-user {
     background-color: #e9f7ef;
     color: #0f5132;
@@ -57,7 +49,6 @@ p.subtitle {
     align-self: flex-end;
     box-shadow: 0 2px 8px rgba(0,0,0,0.2);
 }
-
 .chat-bubble-assistant {
     background-color: #d1e7dd;
     color: #0f5132;
@@ -68,14 +59,11 @@ p.subtitle {
     align-self: flex-start;
     box-shadow: 0 2px 8px rgba(0,0,0,0.2);
 }
-
-/* Sidebar kuning */
 [data-testid="stSidebar"] {
     background: linear-gradient(135deg, #ffeb3b 0%, #fbc02d 100%);
     color: #333 !important;
     font-family: "Segoe UI", sans-serif;
 }
-
 .sidebar-header {
     text-align: center;
     font-weight: bold;
@@ -83,7 +71,6 @@ p.subtitle {
     font-size: 18px;
     margin-bottom: 15px;
 }
-
 .sidebar-item {
     background-color: rgba(255, 255, 255, 0.4);
     padding: 8px 10px;
@@ -91,18 +78,6 @@ p.subtitle {
     margin-bottom: 6px;
     color: #0f5132;
     font-size: 14px;
-}
-
-.sidebar-button {
-    display: block;
-    text-align: center;
-    background-color: #0f5132;
-    color: white;
-    border-radius: 8px;
-    padding: 10px 0;
-    font-weight: 600;
-    text-decoration: none;
-    margin-bottom: 10px;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -113,7 +88,9 @@ p.subtitle {
 if "messages" not in st.session_state:
     st.session_state.messages = []
 if "chat_history" not in st.session_state:
-    st.session_state.chat_history = []  # untuk menyimpan sesi lama
+    st.session_state.chat_history = []  # menyimpan sesi lama
+if "all_prompts" not in st.session_state:
+    st.session_state.all_prompts = []  # daftar semua prompt user (global, seperti ChatGPT sidebar)
 
 # ================================
 # 🌿 SIDEBAR UNTUK RIWAYAT & CHAT BARU
@@ -121,21 +98,21 @@ if "chat_history" not in st.session_state:
 with st.sidebar:
     st.markdown("<div class='sidebar-header'>📜 Riwayat Pertanyaan</div>", unsafe_allow_html=True)
 
+    # Tombol buat chat baru
     if st.button("🆕 Chat Baru", use_container_width=True, type="primary"):
-        # Simpan sesi lama ke riwayat sebelum reset
         if st.session_state.messages:
             st.session_state.chat_history.append(st.session_state.messages)
         st.session_state.messages = []
-        st.experimental_rerun()
+        st.rerun()  # gunakan API baru
 
-    user_prompts = [m["text"] for m in st.session_state.messages if m["role"] == "user"]
-
-    if user_prompts:
-        for i, q in enumerate(reversed(user_prompts), 1):
+    # Daftar semua prompt (global history)
+    if st.session_state.all_prompts:
+        for i, q in enumerate(reversed(st.session_state.all_prompts), 1):
             st.markdown(f"<div class='sidebar-item'>{i}. {q}</div>", unsafe_allow_html=True)
     else:
         st.info("Belum ada pertanyaan yang diajukan.")
 
+    # Daftar sesi lama (chat_history)
     if st.session_state.chat_history:
         st.markdown("### 💾 Riwayat Chat Sebelumnya")
         for idx, chat in enumerate(reversed(st.session_state.chat_history), 1):
@@ -171,10 +148,15 @@ with chat_box:
 prompt = st.chat_input("💬 Ketik pertanyaan hukum Anda di sini...")
 
 if prompt:
+    # Zona waktu GMT+7
     tz = pytz.timezone("Asia/Jakarta")
     current_time = datetime.datetime.now(tz).strftime("%H:%M:%S")
 
+    # Simpan ke session messages
     st.session_state.messages.append({"role": "user", "text": prompt, "time": current_time})
+
+    # Tambahkan juga ke global riwayat prompt (hanya pertanyaan user)
+    st.session_state.all_prompts.append(prompt)
 
     with chat_box:
         st.markdown(f"<div class='chat-bubble-user'><b>Anda ({current_time})</b><br>{prompt}</div>", unsafe_allow_html=True)
