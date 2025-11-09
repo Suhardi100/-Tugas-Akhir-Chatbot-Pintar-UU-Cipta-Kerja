@@ -204,7 +204,7 @@ if st.session_state.viewing_history_index is None:
         current_time = datetime.datetime.now(tz).strftime("%H:%M:%S")
 
         st.session_state.messages.append({
-            "role": "assistant",
+            "role": "Suhardi-Chatbot",
             "text": response_text,
             "time": current_time
         })
