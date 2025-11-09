@@ -96,7 +96,7 @@ p.subtitle {
     cursor: pointer;
 }
 
-/* 🔴 Tombol di Sidebar: “Mulai Chat Baru” */
+/* 🔴 Tombol di Sidebar: “Mulai Chat Baru” — satu definisi final */
 [data-testid="stSidebar"] button[kind="primary"] {
     background-color: #ffffff !important; /* putih */
     color: #c1121f !important; /* teks merah */
