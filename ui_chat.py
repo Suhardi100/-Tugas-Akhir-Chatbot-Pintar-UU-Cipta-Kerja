@@ -126,32 +126,19 @@ for key in ["messages", "chat_history", "pending_prompt"]:
 if "viewing_history_index" not in st.session_state:
     st.session_state.viewing_history_index = None  # indeks riwayat yang sedang dilihat
 
-if "session_saved" not in st.session_state:
-    st.session_state.session_saved = False  # menandai apakah sesi sudah disimpan
-
-# ================================
-# 🌿 SIMPAN OTOMATIS CHAT PER SESI
-# ================================
-# Jika sudah ada percakapan dan belum disimpan ke riwayat, maka simpan otomatis
-if st.session_state.messages and not st.session_state.session_saved:
-    st.session_state.chat_history.append(st.session_state.messages.copy())
-    st.session_state.session_saved = True
-
 # ================================
 # 🌿 SIDEBAR — RIWAYAT CHAT
 # ================================
 with st.sidebar:
     # Tombol chat baru
     if st.button("🆕 Mulai Chat Baru", use_container_width=True):
+        # 🛠️ PERUBAHAN DI SINI:
+        # Hanya simpan chat lama ke riwayat jika bukan sedang melihat riwayat.
         if st.session_state.messages and st.session_state.viewing_history_index is None:
-            # Hanya simpan jika sesi belum tersimpan
-            if not st.session_state.session_saved:
-                st.session_state.chat_history.append(st.session_state.messages.copy())
-        # Reset sesi baru
+            st.session_state.chat_history.append(st.session_state.messages.copy())
         st.session_state.messages = []
         st.session_state.pending_prompt = None
         st.session_state.viewing_history_index = None
-        st.session_state.session_saved = False
         st.rerun()
 
     # 🔽 Tambahkan teks "Riwayat Chat" di bawah tombol
@@ -166,7 +153,6 @@ with st.sidebar:
                 st.session_state.messages = chat.copy()
                 st.session_state.viewing_history_index = len(st.session_state.chat_history) - i
                 st.session_state.pending_prompt = None
-                st.session_state.session_saved = True
                 st.rerun()
     else:
         st.info("Belum ada riwayat chat tersimpan.")
@@ -209,7 +195,6 @@ if st.session_state.viewing_history_index is None:
             "time": current_time
         })
         st.session_state.pending_prompt = prompt
-        st.session_state.session_saved = False  # menandakan sesi aktif baru saja berubah
         st.rerun()
 
     if st.session_state.pending_prompt:
@@ -230,8 +215,8 @@ if st.session_state.viewing_history_index is None:
             "text": response_text,
             "time": current_time
         })
+
         st.session_state.pending_prompt = None
-        st.session_state.session_saved = False  # perubahan baru → sesi perlu disimpan ulang
         st.rerun()
 else:
     st.info("🔒 Anda sedang melihat riwayat chat lama. Klik '🆕 Mulai Chat Baru' untuk memulai percakapan baru.")
