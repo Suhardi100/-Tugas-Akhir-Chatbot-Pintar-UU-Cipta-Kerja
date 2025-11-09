@@ -7,8 +7,8 @@ import app  # memanggil logika utama dari app.py
 # 🌿 KONFIGURASI HALAMAN
 # ================================
 st.set_page_config(
-    page_title="Chatbot UU Cipta Kerja 🇮🇩",
-    page_icon="🤖",
+    page_title="Chatbot Pintar UU Cipta Kerja",
+    page_icon="🇮🇩",
     layout="wide",
 )
 
@@ -126,7 +126,7 @@ if "viewing_history_index" not in st.session_state:
 # 🌿 SIDEBAR — RIWAYAT CHAT
 # ================================
 with st.sidebar:
-    if st.button("🆕 Mulai Chat Baru", use_container_width=True):
+    if st.button("MULAI CHAT BARU", use_container_width=True):
         if st.session_state.messages and st.session_state.viewing_history_index is None:
             st.session_state.chat_history.append(st.session_state.messages.copy())
         st.session_state.messages = []
@@ -134,19 +134,19 @@ with st.sidebar:
         st.session_state.viewing_history_index = None
         st.rerun()
 
-    st.markdown("<div class='sidebar-header'>📜 Riwayat Chat</div>", unsafe_allow_html=True)
+    st.markdown("<div class='sidebar-header'>RIWAYAT PERTANYAAN ANDA:</div>", unsafe_allow_html=True)
 
     if st.session_state.chat_history:
         for i, chat in enumerate(reversed(st.session_state.chat_history), 1):
             first_msg = next((m["text"] for m in chat if m["role"] == "user"), "(tanpa isi)")
             short_preview = (first_msg[:60] + "...") if len(first_msg) > 60 else first_msg
-            if st.button(f"💬 {short_preview}", use_container_width=True, key=f"hist_{i}"):
+            if st.button(f"{short_preview}", use_container_width=True, key=f"hist_{i}"):
                 st.session_state.messages = chat.copy()
                 st.session_state.viewing_history_index = len(st.session_state.chat_history) - i
                 st.session_state.pending_prompt = None
                 st.rerun()
     else:
-        st.info("Belum ada riwayat chat tersimpan.")
+        st.info('Belum ada riwayat pertanyaan tersimpan. Riwayat hanya akan tersimpan setelah Anda menekan tombol "MULAI CHAT BARU".')
 
 # ================================
 # 🌿 HEADER
