@@ -23,7 +23,7 @@ st.markdown("""
     font-family: "Segoe UI", sans-serif;
 }
 
-/* Animasi sederhana */
+/* Animasi lembut */
 @keyframes fadeIn {
   from {opacity: 0; transform: translateY(10px);}
   to {opacity: 1; transform: translateY(0);}
@@ -106,18 +106,18 @@ p.subtitle {
     cursor: pointer;
 }
 
-/* Tombol Chat Baru */
-.chat-new-btn {
+/* Tombol Chat Baru (HTML versi custom) */
+button.chat-new-btn {
+    width: 100%;
     background-color: #dc3545; /* merah */
     color: black;
-    border-radius: 10px;
-    padding: 10px 0;
-    text-align: center;
     font-weight: bold;
-    margin-top: 10px;
-    transition: all 0.2s ease;
+    border: none;
+    border-radius: 10px;
+    padding: 10px;
+    transition: all 0.3s ease;
 }
-.chat-new-btn:hover {
+button.chat-new-btn:hover {
     background-color: #b02a37;
     color: white;
     cursor: pointer;
@@ -143,12 +143,18 @@ if "selected_prompt" not in st.session_state:
 with st.sidebar:
     st.markdown("<div class='sidebar-header'>📜 Riwayat Pertanyaan</div>", unsafe_allow_html=True)
 
-    # Tombol Chat Baru
-    if st.button("🆕 Mulai Chat Baru", use_container_width=True):
+    # Tombol HTML kustom
+    if st.markdown('<form action="?newchat=true"><button class="chat-new-btn">🆕 Mulai Chat Baru</button></form>', unsafe_allow_html=True):
+        pass
+
+    # Deteksi jika "newchat=true" di URL (berarti tombol diklik)
+    query_params = st.query_params
+    if "newchat" in query_params:
         if st.session_state.messages:
             st.session_state.chat_history.append(st.session_state.messages.copy())
         st.session_state.messages = []
         st.session_state.selected_prompt = None
+        st.query_params.clear()
         st.rerun()
 
     # Riwayat prompt bisa diklik
@@ -156,9 +162,7 @@ with st.sidebar:
         for i, q in enumerate(reversed(st.session_state.all_prompts), 1):
             short_q = (q[:60] + "...") if len(q) > 60 else q
             if st.button(f"{i}. {short_q}", key=f"prompt_{i}", use_container_width=True):
-                # Saat diklik, simpan prompt yang dipilih
                 st.session_state.selected_prompt = q
-                # Tambahkan ke messages agar bisa dilihat kembali
                 st.session_state.messages = [{"role": "user", "text": q, "time": "Riwayat"}]
                 st.rerun()
     else:
@@ -195,15 +199,12 @@ if prompt:
     tz = pytz.timezone("Asia/Jakarta")
     current_time = datetime.datetime.now(tz).strftime("%H:%M:%S")
 
-    # Langsung tampilkan pesan user di UI sebelum proses
     st.session_state.messages.append({"role": "user", "text": prompt, "time": current_time})
     st.session_state.all_prompts.append(prompt)
 
-    # Perbarui tampilan segera (tanpa menunggu model)
     with chat_box:
         st.markdown(f"<div class='chat-bubble-user'><b>Anda ({current_time})</b><br>{prompt}</div>", unsafe_allow_html=True)
 
-    # Jalankan model di belakang
     try:
         with st.spinner("🔍 Sedang menganalisis dengan Agentic RAG..."):
             state = {"question": prompt}
@@ -220,5 +221,4 @@ if prompt:
         "text": response_text,
         "time": current_time
     })
-
     st.rerun()
