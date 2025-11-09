@@ -96,23 +96,19 @@ p.subtitle {
     cursor: pointer;
 }
 
-/* 🔴 Tombol Chat Baru — Kontras */
-.chat-new-btn {
-    display: block;
-    background-color: #c1121f; /* merah tua */
-    color: #000000; /* teks hitam pekat */
-    border-radius: 10px;
-    padding: 10px 0;
-    text-align: center;
-    font-weight: bold;
-    margin-top: 10px;
-    text-decoration: none;
-    transition: 0.3s;
+/* 🔴 Tombol di Sidebar: “Mulai Chat Baru” */
+[data-testid="stSidebar"] button[kind="primary"] {
+    background-color: #c1121f !important; /* merah tua */
+    color: #000000 !important; /* teks hitam pekat */
+    font-weight: bold !important;
+    border-radius: 10px !important;
+    border: 2px solid transparent !important;
+    transition: 0.3s !important;
 }
-.chat-new-btn:hover {
-    background-color: #ffffff; /* putih saat hover */
-    color: #000000; /* tetap hitam pekat */
-    border: 2px solid #c1121f; /* garis merah agar kontras */
+[data-testid="stSidebar"] button[kind="primary"]:hover {
+    background-color: #ffffff !important; /* putih saat hover */
+    color: #000000 !important;
+    border: 2px solid #c1121f !important; /* garis merah saat hover */
 }
 </style>
 """, unsafe_allow_html=True)
