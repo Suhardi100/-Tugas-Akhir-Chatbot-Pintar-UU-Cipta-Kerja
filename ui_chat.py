@@ -99,8 +99,8 @@ p.subtitle {
 /* 🔴 Tombol Chat Baru — Kontras */
 .chat-new-btn {
     display: block;
-    background-color: #c1121f; /* merah tua */
-    color: #000000; /* teks hitam */
+    background-color: #c1121f;
+    color: #000000;
     border-radius: 10px;
     padding: 10px 0;
     text-align: center;
@@ -110,8 +110,8 @@ p.subtitle {
     transition: 0.2s;
 }
 .chat-new-btn:hover {
-    background-color: #ffffff; /* putih saat hover */
-    color: #000000; /* tetap hitam */
+    background-color: #ffffff;
+    color: #000000;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -131,9 +131,11 @@ if "viewing_history_index" not in st.session_state:
 # ================================
 with st.sidebar:
     if st.button("🆕 Mulai Chat Baru", use_container_width=True):
+        # 💾 Simpan seluruh sesi chat sebelumnya ke riwayat satu kali
         if st.session_state.messages and st.session_state.viewing_history_index is None:
-            # simpan chat aktif ke riwayat
             st.session_state.chat_history.append(st.session_state.messages.copy())
+
+        # Reset ke sesi baru
         st.session_state.messages = []
         st.session_state.pending_prompt = None
         st.session_state.viewing_history_index = None
@@ -185,22 +187,12 @@ if st.session_state.viewing_history_index is None:
         tz = pytz.timezone("Asia/Jakarta")
         current_time = datetime.datetime.now(tz).strftime("%H:%M:%S")
 
-        # Tambahkan pesan user
         st.session_state.messages.append({
             "role": "user",
             "text": prompt,
             "time": current_time
         })
         st.session_state.pending_prompt = prompt
-
-        # 🧠 SIMPAN OTOMATIS CHAT SAAT PROMPT DIKIRIM
-        if st.session_state.messages:
-            if (
-                not st.session_state.chat_history
-                or st.session_state.messages != st.session_state.chat_history[-1]
-            ):
-                st.session_state.chat_history.append(st.session_state.messages.copy())
-
         st.rerun()
 
     if st.session_state.pending_prompt:
@@ -222,14 +214,6 @@ if st.session_state.viewing_history_index is None:
             "text": response_text,
             "time": current_time
         })
-
-        # 🧠 SIMPAN OTOMATIS SETELAH JAWABAN DITERIMA
-        if st.session_state.messages:
-            if (
-                not st.session_state.chat_history
-                or st.session_state.messages != st.session_state.chat_history[-1]
-            ):
-                st.session_state.chat_history.append(st.session_state.messages.copy())
 
         st.session_state.pending_prompt = None
         st.rerun()
