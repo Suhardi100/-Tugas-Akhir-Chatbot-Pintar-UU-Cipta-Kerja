@@ -1,7 +1,7 @@
 import streamlit as st
 import datetime
 import pytz
-import app  # tetap memanggil logika utama dari app.py
+import app
 
 # ================================
 # 🌿 KONFIGURASI HALAMAN
@@ -13,44 +13,39 @@ st.set_page_config(
 )
 
 # ================================
-# 🌿 CSS PROFESIONAL + ANIMASI HALUS
+# 🌿 CSS PROFESIONAL (Hijau-Emas + Sidebar Merah elegan)
 # ================================
 st.markdown("""
 <style>
-/* ================================
-   🌿 UMUM
-================================ */
 .stApp {
     background: linear-gradient(135deg, #0b3d2e 0%, #198754 100%);
     color: #f8f9fa !important;
     font-family: "Segoe UI", sans-serif;
-    animation: fadeIn 0.8s ease-in-out;
-}
-@keyframes fadeIn {
-  from {opacity: 0;}
-  to {opacity: 1;}
 }
 
-/* ================================
-   🌿 HEADER
-================================ */
+/* Animasi sederhana */
+@keyframes fadeIn {
+  from {opacity: 0; transform: translateY(10px);}
+  to {opacity: 1; transform: translateY(0);}
+}
+
+/* Header */
 h2 {
     text-align: center;
     font-weight: 700;
     color: #d1f7c4 !important;
     margin-bottom: 5px;
-    animation: fadeIn 1.2s ease-in-out;
+    animation: fadeIn 0.6s ease-out;
 }
 p.subtitle {
     text-align: center;
     font-size: 15px;
     color: #e8ffe0;
     margin-bottom: 25px;
+    animation: fadeIn 0.8s ease-out;
 }
 
-/* ================================
-   🌿 CHAT AREA
-================================ */
+/* Chat Container */
 .chat-container {
     background-color: rgba(255, 255, 255, 0.08);
     border-radius: 18px;
@@ -58,19 +53,10 @@ p.subtitle {
     max-height: 70vh;
     overflow-y: auto;
     box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-    animation: fadeIn 0.8s ease-in-out;
+    animation: fadeIn 0.7s ease-out;
 }
 
-/* Bubble animasi halus */
-@keyframes bubbleFade {
-  from {opacity: 0; transform: translateY(10px);}
-  to {opacity: 1; transform: translateY(0);}
-}
-.chat-bubble-user, .chat-bubble-assistant {
-  animation: bubbleFade 0.4s ease-in-out;
-}
-
-/* Bubble pengguna */
+/* Chat bubbles */
 .chat-bubble-user {
     background: #d1e7dd;
     color: #0f5132;
@@ -80,9 +66,9 @@ p.subtitle {
     max-width: 80%;
     margin-left: auto;
     box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    animation: fadeIn 0.3s ease-in;
 }
 
-/* Bubble asisten */
 .chat-bubble-assistant {
     background: #f8f9fa;
     color: #0f5132;
@@ -92,11 +78,10 @@ p.subtitle {
     max-width: 80%;
     margin-right: auto;
     box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    animation: fadeIn 0.5s ease-in;
 }
 
-/* ================================
-   🌿 SIDEBAR
-================================ */
+/* Sidebar */
 [data-testid="stSidebar"] {
     background: linear-gradient(135deg, #fff176 0%, #fbc02d 100%);
     color: #1b4332;
@@ -107,8 +92,6 @@ p.subtitle {
     font-size: 18px;
     margin-bottom: 15px;
 }
-
-/* Item sidebar */
 .sidebar-item {
     background-color: rgba(255,255,255,0.5);
     padding: 8px 10px;
@@ -116,26 +99,28 @@ p.subtitle {
     margin-bottom: 6px;
     color: #0f5132;
     font-size: 14px;
-    transition: all 0.3s ease;
-    animation: bubbleFade 0.4s ease-in-out;
+    transition: all 0.2s ease;
 }
 .sidebar-item:hover {
     background-color: rgba(255,255,255,0.8);
     cursor: pointer;
-    transform: scale(1.02);
 }
 
 /* Tombol Chat Baru */
-.chat-new-btn button {
-    background-color: #c0392b !important;
-    color: black !important;
-    font-weight: bold;
+.chat-new-btn {
+    background-color: #dc3545; /* merah */
+    color: black;
     border-radius: 10px;
-    transition: 0.3s;
+    padding: 10px 0;
+    text-align: center;
+    font-weight: bold;
+    margin-top: 10px;
+    transition: all 0.2s ease;
 }
-.chat-new-btn button:hover {
-    background-color: #e74c3c !important;
-    color: white !important;
+.chat-new-btn:hover {
+    background-color: #b02a37;
+    color: white;
+    cursor: pointer;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -149,6 +134,8 @@ if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 if "all_prompts" not in st.session_state:
     st.session_state.all_prompts = []
+if "selected_prompt" not in st.session_state:
+    st.session_state.selected_prompt = None
 
 # ================================
 # 🌿 SIDEBAR — RIWAYAT CHAT
@@ -157,25 +144,23 @@ with st.sidebar:
     st.markdown("<div class='sidebar-header'>📜 Riwayat Pertanyaan</div>", unsafe_allow_html=True)
 
     # Tombol Chat Baru
-    with st.container():
-        st.markdown('<div class="chat-new-btn">', unsafe_allow_html=True)
-        if st.button("🆕 Mulai Chat Baru", use_container_width=True):
-            if st.session_state.messages:
-                st.session_state.chat_history.append(st.session_state.messages.copy())
-            st.session_state.messages = []
-            st.rerun()
-        st.markdown("</div>", unsafe_allow_html=True)
+    if st.button("🆕 Mulai Chat Baru", use_container_width=True):
+        if st.session_state.messages:
+            st.session_state.chat_history.append(st.session_state.messages.copy())
+        st.session_state.messages = []
+        st.session_state.selected_prompt = None
+        st.rerun()
 
-    # Klik riwayat untuk menampilkan ulang
+    # Riwayat prompt bisa diklik
     if st.session_state.all_prompts:
         for i, q in enumerate(reversed(st.session_state.all_prompts), 1):
             short_q = (q[:60] + "...") if len(q) > 60 else q
-            if st.button(f"🗂️ {short_q}", key=f"prompt_{i}", use_container_width=True):
-                # Cari di chat_history yang punya prompt ini
-                for chat in st.session_state.chat_history:
-                    if chat and chat[0]["text"] == q:
-                        st.session_state.messages = chat.copy()
-                        st.rerun()
+            if st.button(f"{i}. {short_q}", key=f"prompt_{i}", use_container_width=True):
+                # Saat diklik, simpan prompt yang dipilih
+                st.session_state.selected_prompt = q
+                # Tambahkan ke messages agar bisa dilihat kembali
+                st.session_state.messages = [{"role": "user", "text": q, "time": "Riwayat"}]
+                st.rerun()
     else:
         st.info("Belum ada pertanyaan yang diajukan.")
 
@@ -210,12 +195,15 @@ if prompt:
     tz = pytz.timezone("Asia/Jakarta")
     current_time = datetime.datetime.now(tz).strftime("%H:%M:%S")
 
-    # Tampilkan langsung prompt user
+    # Langsung tampilkan pesan user di UI sebelum proses
     st.session_state.messages.append({"role": "user", "text": prompt, "time": current_time})
     st.session_state.all_prompts.append(prompt)
-    st.rerun()
 
-    # Jalankan Agentic RAG
+    # Perbarui tampilan segera (tanpa menunggu model)
+    with chat_box:
+        st.markdown(f"<div class='chat-bubble-user'><b>Anda ({current_time})</b><br>{prompt}</div>", unsafe_allow_html=True)
+
+    # Jalankan model di belakang
     try:
         with st.spinner("🔍 Sedang menganalisis dengan Agentic RAG..."):
             state = {"question": prompt}
@@ -233,6 +221,4 @@ if prompt:
         "time": current_time
     })
 
-    # Simpan ke history untuk bisa diakses ulang
-    st.session_state.chat_history.append(st.session_state.messages.copy())
     st.rerun()
