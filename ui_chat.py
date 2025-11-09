@@ -98,17 +98,17 @@ p.subtitle {
 
 /* 🔴 Tombol di Sidebar: “Mulai Chat Baru” */
 [data-testid="stSidebar"] button[kind="primary"] {
-    background-color: #c1121f !important; /* merah tua */
-    color: #000000 !important; /* teks hitam pekat */
+    background-color: #ff0000 !important; /* merah */
+    color: #000000 !important; /* teks hitam */
     font-weight: bold !important;
     border-radius: 10px !important;
-    border: 2px solid transparent !important;
+    border: none !important;
     transition: 0.3s !important;
 }
 [data-testid="stSidebar"] button[kind="primary"]:hover {
     background-color: #ffffff !important; /* putih saat hover */
-    color: #000000 !important;
-    border: 2px solid #c1121f !important; /* garis merah saat hover */
+    color: #000000 !important; /* tetap hitam */
+    border: 2px solid #ff0000 !important; /* outline merah */
 }
 </style>
 """, unsafe_allow_html=True)
