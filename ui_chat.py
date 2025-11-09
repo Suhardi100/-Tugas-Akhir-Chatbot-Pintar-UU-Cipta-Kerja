@@ -115,12 +115,9 @@ p.subtitle {
 # ================================
 # 🌿 INISIALISASI SESSION STATE
 # ================================
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-if "chat_history" not in st.session_state:
-    st.session_state.chat_history = []
-if "all_prompts" not in st.session_state:
-    st.session_state.all_prompts = []
+for key in ["messages", "chat_history", "all_prompts", "pending_prompt"]:
+    if key not in st.session_state:
+        st.session_state[key] = [] if key != "pending_prompt" else None
 
 # ================================
 # 🌿 SIDEBAR — RIWAYAT CHAT
@@ -128,14 +125,13 @@ if "all_prompts" not in st.session_state:
 with st.sidebar:
     st.markdown("<div class='sidebar-header'>📜 Riwayat Pertanyaan</div>", unsafe_allow_html=True)
 
-    # Tombol Chat Baru
     if st.button("🆕 Mulai Chat Baru", use_container_width=True):
         if st.session_state.messages:
             st.session_state.chat_history.append(st.session_state.messages.copy())
         st.session_state.messages = []
+        st.session_state.pending_prompt = None
         st.rerun()
 
-    # Tampilkan riwayat prompt user (tanpa duplikasi)
     if st.session_state.all_prompts:
         for i, q in enumerate(reversed(st.session_state.all_prompts), 1):
             short_q = (q[:60] + "...") if len(q) > 60 else q
@@ -170,20 +166,25 @@ with chat_box:
 # ================================
 prompt = st.chat_input("💬 Ketik pertanyaan hukum Anda di sini...")
 
+# Langsung tampilkan prompt user tanpa menunggu model
 if prompt:
     tz = pytz.timezone("Asia/Jakarta")
     current_time = datetime.datetime.now(tz).strftime("%H:%M:%S")
 
-    # Tambahkan ke pesan aktif
-    st.session_state.messages.append({"role": "user", "text": prompt, "time": current_time})
-
-    # Tambahkan ke global riwayat prompt (langsung tampil tanpa klik chat baru)
+    st.session_state.messages.append({
+        "role": "user",
+        "text": prompt,
+        "time": current_time
+    })
     st.session_state.all_prompts.append(prompt)
+    st.session_state.pending_prompt = prompt
+    st.rerun()
 
-    # Jalankan Agentic RAG
+# Jalankan Agentic RAG di background setelah prompt tampil
+if st.session_state.pending_prompt:
     with st.spinner("🔍 Sedang menganalisis dengan Agentic RAG..."):
         try:
-            state = {"question": prompt}
+            state = {"question": st.session_state.pending_prompt}
             result = app.runnable_graph.invoke(state)
             answer = result.get("answer", "Tidak ada jawaban ditemukan.")
             reasoning = result.get("reasoning", "")
@@ -191,11 +192,13 @@ if prompt:
         except Exception as e:
             response_text = f"⚠️ Terjadi kesalahan: {e}"
 
-        current_time = datetime.datetime.now(tz).strftime("%H:%M:%S")
-        st.session_state.messages.append({
-            "role": "assistant",
-            "text": response_text,
-            "time": current_time
-        })
+    tz = pytz.timezone("Asia/Jakarta")
+    current_time = datetime.datetime.now(tz).strftime("%H:%M:%S")
+    st.session_state.messages.append({
+        "role": "assistant",
+        "text": response_text,
+        "time": current_time
+    })
 
+    st.session_state.pending_prompt = None
     st.rerun()
