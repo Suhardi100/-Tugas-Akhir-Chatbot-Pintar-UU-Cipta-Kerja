@@ -69,18 +69,6 @@ p.subtitle {
     box-shadow: 0 2px 8px rgba(0,0,0,0.2);
 }
 
-/* Timestamp */
-.timestamp {
-    font-size: 11px;
-    color: #c9decf;
-}
-
-/* Chat input box */
-[data-baseweb="input"] {
-    background-color: #ffffff !important;
-    color: #0f5132 !important;
-}
-
 /* Sidebar kuning */
 [data-testid="stSidebar"] {
     background: linear-gradient(135deg, #ffeb3b 0%, #fbc02d 100%);
@@ -93,27 +81,53 @@ p.subtitle {
     font-weight: bold;
     color: #0f5132;
     font-size: 18px;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
 }
 
 .sidebar-item {
-    background-color: rgba(255, 255, 255, 0.3);
+    background-color: rgba(255, 255, 255, 0.4);
     padding: 8px 10px;
     border-radius: 8px;
     margin-bottom: 6px;
     color: #0f5132;
     font-size: 14px;
 }
+
+.sidebar-button {
+    display: block;
+    text-align: center;
+    background-color: #0f5132;
+    color: white;
+    border-radius: 8px;
+    padding: 10px 0;
+    font-weight: 600;
+    text-decoration: none;
+    margin-bottom: 10px;
+}
 </style>
 """, unsafe_allow_html=True)
 
 # ================================
-# 🌿 SIDEBAR UNTUK RIWAYAT PROMPT
+# 🌿 INISIALISASI SESSION STATE
+# ================================
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []  # untuk menyimpan sesi lama
+
+# ================================
+# 🌿 SIDEBAR UNTUK RIWAYAT & CHAT BARU
 # ================================
 with st.sidebar:
     st.markdown("<div class='sidebar-header'>📜 Riwayat Pertanyaan</div>", unsafe_allow_html=True)
-    if "messages" not in st.session_state:
+
+    if st.button("🆕 Chat Baru", use_container_width=True, type="primary"):
+        # Simpan sesi lama ke riwayat sebelum reset
+        if st.session_state.messages:
+            st.session_state.chat_history.append(st.session_state.messages)
         st.session_state.messages = []
+        st.experimental_rerun()
+
     user_prompts = [m["text"] for m in st.session_state.messages if m["role"] == "user"]
 
     if user_prompts:
@@ -121,6 +135,13 @@ with st.sidebar:
             st.markdown(f"<div class='sidebar-item'>{i}. {q}</div>", unsafe_allow_html=True)
     else:
         st.info("Belum ada pertanyaan yang diajukan.")
+
+    if st.session_state.chat_history:
+        st.markdown("### 💾 Riwayat Chat Sebelumnya")
+        for idx, chat in enumerate(reversed(st.session_state.chat_history), 1):
+            if chat:
+                first_q = chat[0]['text'][:40] + "..." if len(chat[0]['text']) > 40 else chat[0]['text']
+                st.markdown(f"<div class='sidebar-item'>💬 Sesi {idx}: {first_q}</div>", unsafe_allow_html=True)
 
 # ================================
 # 🌿 HEADER UTAMA
@@ -131,7 +152,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ================================
-# 💬 CHAT AREA
+# 💬 AREA CHAT
 # ================================
 chat_box = st.container()
 with chat_box:
@@ -150,7 +171,6 @@ with chat_box:
 prompt = st.chat_input("💬 Ketik pertanyaan hukum Anda di sini...")
 
 if prompt:
-    # Zona waktu GMT+7
     tz = pytz.timezone("Asia/Jakarta")
     current_time = datetime.datetime.now(tz).strftime("%H:%M:%S")
 
