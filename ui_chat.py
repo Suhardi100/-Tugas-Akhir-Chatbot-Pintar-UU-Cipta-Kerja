@@ -1,7 +1,7 @@
 import streamlit as st
 import datetime
 import pytz
-import app  # tetap memanggil semua logika dari app.py
+import app  # memanggil logika utama dari app.py
 
 # ================================
 # 🌿 KONFIGURASI HALAMAN
@@ -13,71 +13,101 @@ st.set_page_config(
 )
 
 # ================================
-# 🌿 GAYA CSS (tema hijau profesional + sidebar kuning)
+# 🌿 CSS PROFESIONAL — GAYA CHATGPT (tema hijau-emas)
 # ================================
 st.markdown("""
 <style>
+/* Umum */
 .stApp {
-    background: linear-gradient(135deg, #0f5132 0%, #198754 100%);
-    color: white !important;
+    background: linear-gradient(135deg, #0b3d2e 0%, #198754 100%);
+    color: #f8f9fa !important;
+    font-family: "Segoe UI", sans-serif;
 }
-.chat-container {
-    background-color: rgba(255, 255, 255, 0.10);
-    border-radius: 16px;
-    padding: 25px;
-    margin-top: 20px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-}
+
+/* Header */
 h2 {
-    color: #d1f7c4 !important;
     text-align: center;
     font-weight: 700;
-    font-family: "Segoe UI", sans-serif;
+    color: #d1f7c4 !important;
+    margin-bottom: 5px;
 }
 p.subtitle {
     text-align: center;
-    font-size: 16px;
-    color: #e7ffe0;
+    font-size: 15px;
+    color: #e8ffe0;
+    margin-bottom: 25px;
 }
+
+/* Chat Container */
+.chat-container {
+    background-color: rgba(255, 255, 255, 0.08);
+    border-radius: 18px;
+    padding: 20px;
+    max-height: 70vh;
+    overflow-y: auto;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
+/* Chat Bubbles */
 .chat-bubble-user {
-    background-color: #e9f7ef;
+    background: #d1e7dd;
     color: #0f5132;
     padding: 12px 18px;
-    border-radius: 16px;
-    margin-bottom: 10px;
+    border-radius: 18px 18px 4px 18px;
+    margin-bottom: 12px;
     max-width: 80%;
-    align-self: flex-end;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    margin-left: auto;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
 }
+
 .chat-bubble-assistant {
-    background-color: #d1e7dd;
+    background: #f8f9fa;
     color: #0f5132;
     padding: 12px 18px;
-    border-radius: 16px;
-    margin-bottom: 10px;
+    border-radius: 18px 18px 18px 4px;
+    margin-bottom: 12px;
     max-width: 80%;
-    align-self: flex-start;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    margin-right: auto;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
 }
+
+/* Sidebar */
 [data-testid="stSidebar"] {
-    background: linear-gradient(135deg, #ffeb3b 0%, #fbc02d 100%);
-    color: #333 !important;
-    font-family: "Segoe UI", sans-serif;
+    background: linear-gradient(135deg, #fff176 0%, #fbc02d 100%);
+    color: #1b4332;
 }
 .sidebar-header {
     text-align: center;
     font-weight: bold;
-    color: #0f5132;
     font-size: 18px;
     margin-bottom: 15px;
 }
 .sidebar-item {
-    background-color: rgba(255, 255, 255, 0.4);
+    background-color: rgba(255,255,255,0.5);
     padding: 8px 10px;
-    border-radius: 8px;
+    border-radius: 10px;
     margin-bottom: 6px;
     color: #0f5132;
     font-size: 14px;
+    transition: 0.2s;
+}
+.sidebar-item:hover {
+    background-color: rgba(255,255,255,0.8);
+    cursor: pointer;
+}
+.chat-new-btn {
+    display: block;
+    background-color: #0f5132;
+    color: white;
+    border-radius: 10px;
+    padding: 10px 0;
+    text-align: center;
+    font-weight: bold;
+    margin-top: 10px;
+    text-decoration: none;
+}
+.chat-new-btn:hover {
+    background-color: #145a32;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -88,40 +118,33 @@ p.subtitle {
 if "messages" not in st.session_state:
     st.session_state.messages = []
 if "chat_history" not in st.session_state:
-    st.session_state.chat_history = []  # menyimpan sesi lama
+    st.session_state.chat_history = []
 if "all_prompts" not in st.session_state:
-    st.session_state.all_prompts = []  # daftar semua prompt user (global, seperti ChatGPT sidebar)
+    st.session_state.all_prompts = []
 
 # ================================
-# 🌿 SIDEBAR UNTUK RIWAYAT & CHAT BARU
+# 🌿 SIDEBAR — RIWAYAT CHAT
 # ================================
 with st.sidebar:
     st.markdown("<div class='sidebar-header'>📜 Riwayat Pertanyaan</div>", unsafe_allow_html=True)
 
-    # Tombol buat chat baru
-    if st.button("🆕 Chat Baru", use_container_width=True, type="primary"):
+    # Tombol Chat Baru
+    if st.button("🆕 Mulai Chat Baru", use_container_width=True):
         if st.session_state.messages:
-            st.session_state.chat_history.append(st.session_state.messages)
+            st.session_state.chat_history.append(st.session_state.messages.copy())
         st.session_state.messages = []
-        st.rerun()  # gunakan API baru
+        st.rerun()
 
-    # Daftar semua prompt (global history)
+    # Tampilkan riwayat prompt user (tanpa duplikasi)
     if st.session_state.all_prompts:
         for i, q in enumerate(reversed(st.session_state.all_prompts), 1):
-            st.markdown(f"<div class='sidebar-item'>{i}. {q}</div>", unsafe_allow_html=True)
+            short_q = (q[:60] + "...") if len(q) > 60 else q
+            st.markdown(f"<div class='sidebar-item'>{i}. {short_q}</div>", unsafe_allow_html=True)
     else:
         st.info("Belum ada pertanyaan yang diajukan.")
 
-    # Daftar sesi lama (chat_history)
-    if st.session_state.chat_history:
-        st.markdown("### 💾 Riwayat Chat Sebelumnya")
-        for idx, chat in enumerate(reversed(st.session_state.chat_history), 1):
-            if chat:
-                first_q = chat[0]['text'][:40] + "..." if len(chat[0]['text']) > 40 else chat[0]['text']
-                st.markdown(f"<div class='sidebar-item'>💬 Sesi {idx}: {first_q}</div>", unsafe_allow_html=True)
-
 # ================================
-# 🌿 HEADER UTAMA
+# 🌿 HEADER
 # ================================
 st.markdown("""
 <h2>🤖 Chatbot UU Cipta Kerja (Agentic RAG)</h2>
@@ -148,20 +171,16 @@ with chat_box:
 prompt = st.chat_input("💬 Ketik pertanyaan hukum Anda di sini...")
 
 if prompt:
-    # Zona waktu GMT+7
     tz = pytz.timezone("Asia/Jakarta")
     current_time = datetime.datetime.now(tz).strftime("%H:%M:%S")
 
-    # Simpan ke session messages
+    # Tambahkan ke pesan aktif
     st.session_state.messages.append({"role": "user", "text": prompt, "time": current_time})
 
-    # Tambahkan juga ke global riwayat prompt (hanya pertanyaan user)
+    # Tambahkan ke global riwayat prompt (langsung tampil tanpa klik chat baru)
     st.session_state.all_prompts.append(prompt)
 
-    with chat_box:
-        st.markdown(f"<div class='chat-bubble-user'><b>Anda ({current_time})</b><br>{prompt}</div>", unsafe_allow_html=True)
-
-    # Jalankan Agentic RAG dari app.py
+    # Jalankan Agentic RAG
     with st.spinner("🔍 Sedang menganalisis dengan Agentic RAG..."):
         try:
             state = {"question": prompt}
@@ -179,5 +198,4 @@ if prompt:
             "time": current_time
         })
 
-        with chat_box:
-            st.markdown(f"<div class='chat-bubble-assistant'><b>Asisten ({current_time})</b><br>{response_text}</div>", unsafe_allow_html=True)
+    st.rerun()
