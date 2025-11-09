@@ -1,7 +1,7 @@
 import streamlit as st
 import datetime
 import pytz
-import app  # memanggil logika utama dari app.py
+import app  # tetap memanggil logika utama dari app.py
 
 # ================================
 # 🌿 KONFIGURASI HALAMAN
@@ -13,7 +13,7 @@ st.set_page_config(
 )
 
 # ================================
-# 🌿 CSS PROFESIONAL — GAYA CHATGPT (tema hijau-emas)
+# 🌿 CSS PROFESIONAL (tema hijau-emas + animasi halus)
 # ================================
 st.markdown("""
 <style>
@@ -38,6 +38,12 @@ p.subtitle {
     margin-bottom: 25px;
 }
 
+/* Animasi Fade-in */
+@keyframes fadeIn {
+    from {opacity: 0; transform: translateY(10px);}
+    to {opacity: 1; transform: translateY(0);}
+}
+
 /* Chat Container */
 .chat-container {
     background-color: rgba(255, 255, 255, 0.08);
@@ -50,6 +56,7 @@ p.subtitle {
 
 /* Chat Bubbles */
 .chat-bubble-user {
+    animation: fadeIn 0.4s ease-in-out;
     background: #d1e7dd;
     color: #0f5132;
     padding: 12px 18px;
@@ -59,8 +66,8 @@ p.subtitle {
     margin-left: auto;
     box-shadow: 0 2px 8px rgba(0,0,0,0.25);
 }
-
 .chat-bubble-assistant {
+    animation: fadeIn 0.4s ease-in-out;
     background: #f8f9fa;
     color: #0f5132;
     padding: 12px 18px;
@@ -94,20 +101,19 @@ p.subtitle {
 .sidebar-item:hover {
     background-color: rgba(255,255,255,0.8);
     cursor: pointer;
+    transform: scale(1.02);
 }
-.chat-new-btn {
-    display: block;
-    background-color: #0f5132;
-    color: white;
-    border-radius: 10px;
-    padding: 10px 0;
-    text-align: center;
+
+/* Tombol Chat Baru */
+button[data-baseweb="button"] {
+    background-color: #dc3545 !important;  /* Merah */
+    color: black !important;
     font-weight: bold;
-    margin-top: 10px;
-    text-decoration: none;
+    border-radius: 10px !important;
 }
-.chat-new-btn:hover {
-    background-color: #145a32;
+button[data-baseweb="button"]:hover {
+    background-color: #b02a37 !important;
+    color: white !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -121,6 +127,8 @@ if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 if "all_prompts" not in st.session_state:
     st.session_state.all_prompts = []
+if "selected_prompt" not in st.session_state:
+    st.session_state.selected_prompt = None
 
 # ================================
 # 🌿 SIDEBAR — RIWAYAT CHAT
@@ -133,13 +141,19 @@ with st.sidebar:
         if st.session_state.messages:
             st.session_state.chat_history.append(st.session_state.messages.copy())
         st.session_state.messages = []
+        st.session_state.selected_prompt = None
         st.rerun()
 
-    # Tampilkan riwayat prompt user (tanpa duplikasi)
+    # Riwayat Prompt yang bisa diklik
     if st.session_state.all_prompts:
         for i, q in enumerate(reversed(st.session_state.all_prompts), 1):
             short_q = (q[:60] + "...") if len(q) > 60 else q
-            st.markdown(f"<div class='sidebar-item'>{i}. {short_q}</div>", unsafe_allow_html=True)
+            if st.button(f"{i}. {short_q}", key=f"prompt_{i}"):
+                st.session_state.selected_prompt = q
+                st.session_state.messages = [
+                    {"role": "user", "text": q, "time": datetime.datetime.now(pytz.timezone("Asia/Jakarta")).strftime("%H:%M:%S")}
+                ]
+                st.rerun()
     else:
         st.info("Belum ada pertanyaan yang diajukan.")
 
@@ -174,13 +188,16 @@ if prompt:
     tz = pytz.timezone("Asia/Jakarta")
     current_time = datetime.datetime.now(tz).strftime("%H:%M:%S")
 
-    # Tambahkan ke pesan aktif
+    # 1️⃣ Tampilkan pesan user langsung
     st.session_state.messages.append({"role": "user", "text": prompt, "time": current_time})
-
-    # Tambahkan ke global riwayat prompt (langsung tampil tanpa klik chat baru)
     st.session_state.all_prompts.append(prompt)
+    st.session_state.selected_prompt = prompt
 
-    # Jalankan Agentic RAG
+    # Tampilkan bubble user langsung di layar sebelum model menjawab
+    with chat_box:
+        st.markdown(f"<div class='chat-bubble-user'><b>Anda ({current_time})</b><br>{prompt}</div>", unsafe_allow_html=True)
+
+    # 2️⃣ Proses jawaban model
     with st.spinner("🔍 Sedang menganalisis dengan Agentic RAG..."):
         try:
             state = {"question": prompt}
