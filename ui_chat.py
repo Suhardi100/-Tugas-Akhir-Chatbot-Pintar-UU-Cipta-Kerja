@@ -209,4 +209,4 @@ if st.session_state.viewing_history_index is None:
         st.session_state.pending_prompt = None
         st.rerun()
 else:
-    st.info("🔒 Anda sedang melihat riwayat chat lama. Klik '🆕 Mulai Chat Baru' untuk memulai percakapan baru.")
+    st.info("🔒 Anda sedang melihat riwayat chat lama. Klik 'MULAI CHAT BARU' untuk memulai percakapan baru.")
