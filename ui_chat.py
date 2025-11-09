@@ -132,8 +132,7 @@ if "viewing_history_index" not in st.session_state:
 with st.sidebar:
     # Tombol chat baru
     if st.button("🆕 Mulai Chat Baru", use_container_width=True):
-        # 🛠️ PERUBAHAN DI SINI:
-        # Hanya simpan chat lama ke riwayat jika bukan sedang melihat riwayat.
+        # 🛠️ Simpan hanya jika bukan sedang melihat riwayat
         if st.session_state.messages and st.session_state.viewing_history_index is None:
             st.session_state.chat_history.append(st.session_state.messages.copy())
         st.session_state.messages = []
@@ -215,6 +214,10 @@ if st.session_state.viewing_history_index is None:
             "text": response_text,
             "time": current_time
         })
+
+        # 🟢 SIMPAN OTOMATIS KE RIWAYAT SETIAP KALI JAWABAN SELESAI
+        if st.session_state.messages:
+            st.session_state.chat_history.append(st.session_state.messages.copy())
 
         st.session_state.pending_prompt = None
         st.rerun()
