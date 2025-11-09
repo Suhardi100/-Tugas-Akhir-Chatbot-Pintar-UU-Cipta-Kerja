@@ -1,28 +1,29 @@
 import streamlit as st
 import datetime
-import app  # Jangan ubah: tetap memanggil agent & tools dari app.py
+import pytz
+import app  # tetap memanggil semua logika dari app.py
 
 # ================================
-# 🌿 CONFIGURASI HALAMAN
+# 🌿 KONFIGURASI HALAMAN
 # ================================
 st.set_page_config(
     page_title="Chatbot UU Cipta Kerja 🇮🇩",
     page_icon="🤖",
-    layout="centered",
+    layout="wide",
 )
 
 # ================================
-# 🌿 GAYA CSS (tema hijau profesional)
+# 🌿 GAYA CSS (tema hijau profesional + sidebar kuning)
 # ================================
 st.markdown("""
 <style>
-/* Background gradient */
+/* Background utama */
 .stApp {
     background: linear-gradient(135deg, #0f5132 0%, #198754 100%);
     color: white !important;
 }
 
-/* Card chat container */
+/* Kontainer utama chat */
 .chat-container {
     background-color: rgba(255, 255, 255, 0.10);
     border-radius: 16px;
@@ -68,7 +69,7 @@ p.subtitle {
     box-shadow: 0 2px 8px rgba(0,0,0,0.2);
 }
 
-/* Timestamp style */
+/* Timestamp */
 .timestamp {
     font-size: 11px;
     color: #c9decf;
@@ -79,11 +80,50 @@ p.subtitle {
     background-color: #ffffff !important;
     color: #0f5132 !important;
 }
+
+/* Sidebar kuning */
+[data-testid="stSidebar"] {
+    background: linear-gradient(135deg, #ffeb3b 0%, #fbc02d 100%);
+    color: #333 !important;
+    font-family: "Segoe UI", sans-serif;
+}
+
+.sidebar-header {
+    text-align: center;
+    font-weight: bold;
+    color: #0f5132;
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+.sidebar-item {
+    background-color: rgba(255, 255, 255, 0.3);
+    padding: 8px 10px;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    color: #0f5132;
+    font-size: 14px;
+}
 </style>
 """, unsafe_allow_html=True)
 
 # ================================
-# 🌿 HEADER
+# 🌿 SIDEBAR UNTUK RIWAYAT PROMPT
+# ================================
+with st.sidebar:
+    st.markdown("<div class='sidebar-header'>📜 Riwayat Pertanyaan</div>", unsafe_allow_html=True)
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
+    user_prompts = [m["text"] for m in st.session_state.messages if m["role"] == "user"]
+
+    if user_prompts:
+        for i, q in enumerate(reversed(user_prompts), 1):
+            st.markdown(f"<div class='sidebar-item'>{i}. {q}</div>", unsafe_allow_html=True)
+    else:
+        st.info("Belum ada pertanyaan yang diajukan.")
+
+# ================================
+# 🌿 HEADER UTAMA
 # ================================
 st.markdown("""
 <h2>🤖 Chatbot UU Cipta Kerja (Agentic RAG)</h2>
@@ -91,11 +131,8 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ================================
-# 💬 RIWAYAT CHAT
+# 💬 CHAT AREA
 # ================================
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-
 chat_box = st.container()
 with chat_box:
     st.markdown("<div class='chat-container'>", unsafe_allow_html=True)
@@ -113,7 +150,10 @@ with chat_box:
 prompt = st.chat_input("💬 Ketik pertanyaan hukum Anda di sini...")
 
 if prompt:
-    current_time = datetime.datetime.now().strftime("%H:%M:%S")
+    # Zona waktu GMT+7
+    tz = pytz.timezone("Asia/Jakarta")
+    current_time = datetime.datetime.now(tz).strftime("%H:%M:%S")
+
     st.session_state.messages.append({"role": "user", "text": prompt, "time": current_time})
 
     with chat_box:
@@ -130,7 +170,7 @@ if prompt:
         except Exception as e:
             response_text = f"⚠️ Terjadi kesalahan: {e}"
 
-        current_time = datetime.datetime.now().strftime("%H:%M:%S")
+        current_time = datetime.datetime.now(tz).strftime("%H:%M:%S")
         st.session_state.messages.append({
             "role": "assistant",
             "text": response_text,
