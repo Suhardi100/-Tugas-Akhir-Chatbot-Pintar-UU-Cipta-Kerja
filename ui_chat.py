@@ -99,19 +99,20 @@ p.subtitle {
 /* 🔴 Tombol Chat Baru — Kontras */
 .chat-new-btn {
     display: block;
-    background-color: #c1121f;
-    color: #000000;
+    background-color: #c1121f; /* merah tua */
+    color: #000000; /* teks hitam pekat */
     border-radius: 10px;
     padding: 10px 0;
     text-align: center;
     font-weight: bold;
     margin-top: 10px;
     text-decoration: none;
-    transition: 0.2s;
+    transition: 0.3s;
 }
 .chat-new-btn:hover {
-    background-color: #ffffff;
-    color: #000000;
+    background-color: #ffffff; /* putih saat hover */
+    color: #000000; /* tetap hitam pekat */
+    border: 2px solid #c1121f; /* garis merah agar kontras */
 }
 </style>
 """, unsafe_allow_html=True)
