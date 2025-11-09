@@ -1,7 +1,7 @@
 import streamlit as st
 import datetime
 import pytz
-import app  # memanggil semua logika dari app.py
+import app  # memanggil logika utama dari app.py
 
 # ================================
 # 🌿 KONFIGURASI HALAMAN
@@ -13,72 +13,135 @@ st.set_page_config(
 )
 
 # ================================
-# 🌿 INISIALISASI SESSION STATE
-# ================================
-if "chats" not in st.session_state:
-    st.session_state.chats = {}  # {chat_name: [messages]}
-if "current_chat" not in st.session_state:
-    st.session_state.current_chat = "Percakapan Baru"
-if st.session_state.current_chat not in st.session_state.chats:
-    st.session_state.chats[st.session_state.current_chat] = []
-
-# ================================
-# 🌿 CSS
+# 🌿 CSS PROFESIONAL — GAYA CHATGPT (tema hijau-emas)
 # ================================
 st.markdown("""
 <style>
-.stApp { background: linear-gradient(135deg, #0f5132 0%, #198754 100%); color: white; }
+/* Umum */
+.stApp {
+    background: linear-gradient(135deg, #0b3d2e 0%, #198754 100%);
+    color: #f8f9fa !important;
+    font-family: "Segoe UI", sans-serif;
+}
+
+/* Header */
+h2 {
+    text-align: center;
+    font-weight: 700;
+    color: #d1f7c4 !important;
+    margin-bottom: 5px;
+}
+p.subtitle {
+    text-align: center;
+    font-size: 15px;
+    color: #e8ffe0;
+    margin-bottom: 25px;
+}
+
+/* Chat Container */
 .chat-container {
-    background-color: rgba(255, 255, 255, 0.10);
-    border-radius: 16px; padding: 25px; margin-top: 20px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    background-color: rgba(255, 255, 255, 0.08);
+    border-radius: 18px;
+    padding: 20px;
+    max-height: 70vh;
+    overflow-y: auto;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
 }
-h2 { color: #d1f7c4 !important; text-align: center; font-weight: 700; font-family: "Segoe UI", sans-serif; }
-p.subtitle { text-align: center; font-size: 16px; color: #e7ffe0; }
+
+/* Chat Bubbles */
 .chat-bubble-user {
-    background-color: #e9f7ef; color: #0f5132; padding: 12px 18px; border-radius: 16px;
-    margin-bottom: 10px; max-width: 80%; align-self: flex-end;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    background: #d1e7dd;
+    color: #0f5132;
+    padding: 12px 18px;
+    border-radius: 18px 18px 4px 18px;
+    margin-bottom: 12px;
+    max-width: 80%;
+    margin-left: auto;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
 }
+
 .chat-bubble-assistant {
-    background-color: #d1e7dd; color: #0f5132; padding: 12px 18px; border-radius: 16px;
-    margin-bottom: 10px; max-width: 80%; align-self: flex-start;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    background: #f8f9fa;
+    color: #0f5132;
+    padding: 12px 18px;
+    border-radius: 18px 18px 18px 4px;
+    margin-bottom: 12px;
+    max-width: 80%;
+    margin-right: auto;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
 }
-.timestamp { font-size: 11px; color: #c9decf; }
+
+/* Sidebar */
 [data-testid="stSidebar"] {
-    background: linear-gradient(135deg, #ffeb3b 0%, #fbc02d 100%);
-    color: #333 !important; font-family: "Segoe UI", sans-serif;
+    background: linear-gradient(135deg, #fff176 0%, #fbc02d 100%);
+    color: #1b4332;
 }
-.sidebar-header { text-align: center; font-weight: bold; color: #0f5132; font-size: 18px; margin-bottom: 10px; }
+.sidebar-header {
+    text-align: center;
+    font-weight: bold;
+    font-size: 18px;
+    margin-bottom: 15px;
+}
 .sidebar-item {
-    background-color: rgba(255, 255, 255, 0.3); padding: 8px 10px;
-    border-radius: 8px; margin-bottom: 6px; color: #0f5132; font-size: 14px; cursor: pointer;
+    background-color: rgba(255,255,255,0.5);
+    padding: 8px 10px;
+    border-radius: 10px;
+    margin-bottom: 6px;
+    color: #0f5132;
+    font-size: 14px;
+    transition: 0.2s;
 }
-.sidebar-item:hover { background-color: rgba(255, 255, 255, 0.6); }
-.new-chat-btn {
-    background-color: #0f5132; color: white; border: none; border-radius: 8px;
-    padding: 8px 10px; cursor: pointer; font-weight: bold; margin-top: 10px;
+.sidebar-item:hover {
+    background-color: rgba(255,255,255,0.8);
+    cursor: pointer;
+}
+.chat-new-btn {
+    display: block;
+    background-color: #0f5132;
+    color: white;
+    border-radius: 10px;
+    padding: 10px 0;
+    text-align: center;
+    font-weight: bold;
+    margin-top: 10px;
+    text-decoration: none;
+}
+.chat-new-btn:hover {
+    background-color: #145a32;
 }
 </style>
 """, unsafe_allow_html=True)
 
 # ================================
-# 🌿 SIDEBAR
+# 🌿 INISIALISASI SESSION STATE
+# ================================
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
+if "all_prompts" not in st.session_state:
+    st.session_state.all_prompts = []
+
+# ================================
+# 🌿 SIDEBAR — RIWAYAT CHAT
 # ================================
 with st.sidebar:
-    st.markdown("<div class='sidebar-header'>💬 Riwayat Percakapan</div>", unsafe_allow_html=True)
+    st.markdown("<div class='sidebar-header'>📜 Riwayat Pertanyaan</div>", unsafe_allow_html=True)
 
-    if st.button("➕ Chat Baru", use_container_width=True):
-        new_name = f"Percakapan {len(st.session_state.chats) + 1}"
-        st.session_state.current_chat = new_name
-        st.session_state.chats[new_name] = []
+    # Tombol Chat Baru
+    if st.button("🆕 Mulai Chat Baru", use_container_width=True):
+        if st.session_state.messages:
+            st.session_state.chat_history.append(st.session_state.messages.copy())
+        st.session_state.messages = []
         st.rerun()
 
-    for name in st.session_state.chats.keys():
-        if st.button(name, use_container_width=True):
-            st.session_state.current_chat = name
-            st.rerun()
+    # Tampilkan riwayat prompt user (tanpa duplikasi)
+    if st.session_state.all_prompts:
+        for i, q in enumerate(reversed(st.session_state.all_prompts), 1):
+            short_q = (q[:60] + "...") if len(q) > 60 else q
+            st.markdown(f"<div class='sidebar-item'>{i}. {short_q}</div>", unsafe_allow_html=True)
+    else:
+        st.info("Belum ada pertanyaan yang diajukan.")
 
 # ================================
 # 🌿 HEADER
@@ -89,14 +152,12 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ================================
-# 🌿 CHAT AREA
+# 💬 AREA CHAT
 # ================================
 chat_box = st.container()
-messages = st.session_state.chats[st.session_state.current_chat]
-
 with chat_box:
     st.markdown("<div class='chat-container'>", unsafe_allow_html=True)
-    for msg in messages:
+    for msg in st.session_state.messages:
         role, text, time = msg["role"], msg["text"], msg["time"]
         if role == "user":
             st.markdown(f"<div class='chat-bubble-user'><b>Anda ({time})</b><br>{text}</div>", unsafe_allow_html=True)
@@ -107,16 +168,19 @@ with chat_box:
 # ================================
 # 💬 INPUT CHAT
 # ================================
-prompt = st.chat_input("Ketik pertanyaan hukum Anda di sini...")
+prompt = st.chat_input("💬 Ketik pertanyaan hukum Anda di sini...")
 
 if prompt:
     tz = pytz.timezone("Asia/Jakarta")
     current_time = datetime.datetime.now(tz).strftime("%H:%M:%S")
 
-    # Simpan prompt user
-    messages.append({"role": "user", "text": prompt, "time": current_time})
+    # Tambahkan ke pesan aktif
+    st.session_state.messages.append({"role": "user", "text": prompt, "time": current_time})
 
-    # Jalankan model dari app.py
+    # Tambahkan ke global riwayat prompt (langsung tampil tanpa klik chat baru)
+    st.session_state.all_prompts.append(prompt)
+
+    # Jalankan Agentic RAG
     with st.spinner("🔍 Sedang menganalisis dengan Agentic RAG..."):
         try:
             state = {"question": prompt}
@@ -127,10 +191,11 @@ if prompt:
         except Exception as e:
             response_text = f"⚠️ Terjadi kesalahan: {e}"
 
-    current_time = datetime.datetime.now(tz).strftime("%H:%M:%S")
-    messages.append({"role": "assistant", "text": response_text, "time": current_time})
-
-    # Simpan ke dalam sesi
-    st.session_state.chats[st.session_state.current_chat] = messages
+        current_time = datetime.datetime.now(tz).strftime("%H:%M:%S")
+        st.session_state.messages.append({
+            "role": "assistant",
+            "text": response_text,
+            "time": current_time
+        })
 
     st.rerun()
