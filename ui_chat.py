@@ -153,7 +153,10 @@ with st.sidebar:
 # ================================
 st.markdown("""
 <h2>🤖 Chatbot UU Cipta Kerja (Agentic RAG with Langchain)</h2>
-<p class='subtitle'>Tanyakan apa pun seputar <b>UU No. 11 Tahun 2020</b> tentang Cipta Kerja.\nChatbot ini dibuat oleh SUHARDI untuk memenuhi tugas akhir pembelajaran model bahasa besar (large language model).</p>
+<p class='subtitle'>
+Tanyakan apa pun seputar <b>UU No. 11 Tahun 2020</b> tentang Cipta Kerja.<br>
+Chatbot ini dibuat oleh <b>SUHARDI</b> untuk memenuhi tugas akhir pembelajaran model bahasa besar (large language model).
+</p>
 """, unsafe_allow_html=True)
 
 # ================================
