@@ -124,27 +124,23 @@ for key in ["messages", "chat_history", "pending_prompt"]:
         st.session_state[key] = [] if key != "pending_prompt" else None
 
 if "viewing_history_index" not in st.session_state:
-    st.session_state.viewing_history_index = None  # indeks riwayat yang sedang dilihat
+    st.session_state.viewing_history_index = None
 
 # ================================
 # 🌿 SIDEBAR — RIWAYAT CHAT
 # ================================
 with st.sidebar:
-    # Tombol chat baru
     if st.button("🆕 Mulai Chat Baru", use_container_width=True):
-        # 🛠️ PERUBAHAN DI SINI:
-        # Hanya simpan chat lama ke riwayat jika bukan sedang melihat riwayat.
         if st.session_state.messages and st.session_state.viewing_history_index is None:
+            # simpan chat aktif ke riwayat
             st.session_state.chat_history.append(st.session_state.messages.copy())
         st.session_state.messages = []
         st.session_state.pending_prompt = None
         st.session_state.viewing_history_index = None
         st.rerun()
 
-    # 🔽 Tambahkan teks "Riwayat Chat" di bawah tombol
     st.markdown("<div class='sidebar-header'>📜 Riwayat Chat</div>", unsafe_allow_html=True)
 
-    # Daftar riwayat chat
     if st.session_state.chat_history:
         for i, chat in enumerate(reversed(st.session_state.chat_history), 1):
             first_msg = next((m["text"] for m in chat if m["role"] == "user"), "(tanpa isi)")
@@ -189,12 +185,22 @@ if st.session_state.viewing_history_index is None:
         tz = pytz.timezone("Asia/Jakarta")
         current_time = datetime.datetime.now(tz).strftime("%H:%M:%S")
 
+        # Tambahkan pesan user
         st.session_state.messages.append({
             "role": "user",
             "text": prompt,
             "time": current_time
         })
         st.session_state.pending_prompt = prompt
+
+        # 🧠 SIMPAN OTOMATIS CHAT SAAT PROMPT DIKIRIM
+        if st.session_state.messages:
+            if (
+                not st.session_state.chat_history
+                or st.session_state.messages != st.session_state.chat_history[-1]
+            ):
+                st.session_state.chat_history.append(st.session_state.messages.copy())
+
         st.rerun()
 
     if st.session_state.pending_prompt:
@@ -210,11 +216,20 @@ if st.session_state.viewing_history_index is None:
 
         tz = pytz.timezone("Asia/Jakarta")
         current_time = datetime.datetime.now(tz).strftime("%H:%M:%S")
+
         st.session_state.messages.append({
             "role": "assistant",
             "text": response_text,
             "time": current_time
         })
+
+        # 🧠 SIMPAN OTOMATIS SETELAH JAWABAN DITERIMA
+        if st.session_state.messages:
+            if (
+                not st.session_state.chat_history
+                or st.session_state.messages != st.session_state.chat_history[-1]
+            ):
+                st.session_state.chat_history.append(st.session_state.messages.copy())
 
         st.session_state.pending_prompt = None
         st.rerun()
