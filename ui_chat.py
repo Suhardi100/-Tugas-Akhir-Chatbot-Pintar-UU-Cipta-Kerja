@@ -115,29 +115,41 @@ p.subtitle {
 # ================================
 # 🌿 INISIALISASI SESSION STATE
 # ================================
-for key in ["messages", "chat_history", "all_prompts", "pending_prompt"]:
+for key in ["messages", "chat_history", "pending_prompt"]:
     if key not in st.session_state:
         st.session_state[key] = [] if key != "pending_prompt" else None
+
+if "viewing_history_index" not in st.session_state:
+    st.session_state.viewing_history_index = None  # indeks riwayat yang sedang dilihat
 
 # ================================
 # 🌿 SIDEBAR — RIWAYAT CHAT
 # ================================
 with st.sidebar:
-    st.markdown("<div class='sidebar-header'>📜 Riwayat Pertanyaan</div>", unsafe_allow_html=True)
+    st.markdown("<div class='sidebar-header'>📜 Riwayat Chat</div>", unsafe_allow_html=True)
 
     if st.button("🆕 Mulai Chat Baru", use_container_width=True):
+        # simpan sesi saat ini ke riwayat jika ada isi
         if st.session_state.messages:
             st.session_state.chat_history.append(st.session_state.messages.copy())
         st.session_state.messages = []
         st.session_state.pending_prompt = None
+        st.session_state.viewing_history_index = None
         st.rerun()
 
-    if st.session_state.all_prompts:
-        for i, q in enumerate(reversed(st.session_state.all_prompts), 1):
-            short_q = (q[:60] + "...") if len(q) > 60 else q
-            st.markdown(f"<div class='sidebar-item'>{i}. {short_q}</div>", unsafe_allow_html=True)
+    # tampilkan daftar riwayat chat
+    if st.session_state.chat_history:
+        for i, chat in enumerate(reversed(st.session_state.chat_history), 1):
+            first_msg = next((m["text"] for m in chat if m["role"] == "user"), "(tanpa isi)")
+            short_preview = (first_msg[:60] + "...") if len(first_msg) > 60 else first_msg
+            if st.button(f"💬 {short_preview}", use_container_width=True, key=f"hist_{i}"):
+                # ketika diklik, tampilkan chat itu
+                st.session_state.messages = chat.copy()
+                st.session_state.viewing_history_index = len(st.session_state.chat_history) - i
+                st.session_state.pending_prompt = None
+                st.rerun()
     else:
-        st.info("Belum ada pertanyaan yang diajukan.")
+        st.info("Belum ada riwayat chat tersimpan.")
 
 # ================================
 # 🌿 HEADER
@@ -164,41 +176,44 @@ with chat_box:
 # ================================
 # 💬 INPUT CHAT
 # ================================
-prompt = st.chat_input("💬 Ketik pertanyaan hukum Anda di sini...")
+# hanya aktif jika tidak sedang melihat riwayat lama
+if st.session_state.viewing_history_index is None:
+    prompt = st.chat_input("💬 Ketik pertanyaan hukum Anda di sini...")
 
-# Langsung tampilkan prompt user tanpa menunggu model
-if prompt:
-    tz = pytz.timezone("Asia/Jakarta")
-    current_time = datetime.datetime.now(tz).strftime("%H:%M:%S")
+    # Langsung tampilkan prompt user tanpa menunggu model
+    if prompt:
+        tz = pytz.timezone("Asia/Jakarta")
+        current_time = datetime.datetime.now(tz).strftime("%H:%M:%S")
 
-    st.session_state.messages.append({
-        "role": "user",
-        "text": prompt,
-        "time": current_time
-    })
-    st.session_state.all_prompts.append(prompt)
-    st.session_state.pending_prompt = prompt
-    st.rerun()
+        st.session_state.messages.append({
+            "role": "user",
+            "text": prompt,
+            "time": current_time
+        })
+        st.session_state.pending_prompt = prompt
+        st.rerun()
 
-# Jalankan Agentic RAG di background setelah prompt tampil
-if st.session_state.pending_prompt:
-    with st.spinner("🔍 Sedang menganalisis dengan Agentic RAG..."):
-        try:
-            state = {"question": st.session_state.pending_prompt}
-            result = app.runnable_graph.invoke(state)
-            answer = result.get("answer", "Tidak ada jawaban ditemukan.")
-            reasoning = result.get("reasoning", "")
-            response_text = f"{answer}\n\n🧠 <b>Analisis Tools:</b> {reasoning}"
-        except Exception as e:
-            response_text = f"⚠️ Terjadi kesalahan: {e}"
+    # Jalankan Agentic RAG di background setelah prompt tampil
+    if st.session_state.pending_prompt:
+        with st.spinner("🔍 Sedang menganalisis dengan Agentic RAG..."):
+            try:
+                state = {"question": st.session_state.pending_prompt}
+                result = app.runnable_graph.invoke(state)
+                answer = result.get("answer", "Tidak ada jawaban ditemukan.")
+                reasoning = result.get("reasoning", "")
+                response_text = f"{answer}\n\n🧠 <b>Analisis Tools:</b> {reasoning}"
+            except Exception as e:
+                response_text = f"⚠️ Terjadi kesalahan: {e}"
 
-    tz = pytz.timezone("Asia/Jakarta")
-    current_time = datetime.datetime.now(tz).strftime("%H:%M:%S")
-    st.session_state.messages.append({
-        "role": "assistant",
-        "text": response_text,
-        "time": current_time
-    })
+        tz = pytz.timezone("Asia/Jakarta")
+        current_time = datetime.datetime.now(tz).strftime("%H:%M:%S")
+        st.session_state.messages.append({
+            "role": "assistant",
+            "text": response_text,
+            "time": current_time
+        })
 
-    st.session_state.pending_prompt = None
-    st.rerun()
+        st.session_state.pending_prompt = None
+        st.rerun()
+else:
+    st.info("🔒 Anda sedang melihat riwayat chat lama. Klik '🆕 Mulai Chat Baru' untuk memulai percakapan baru.")
