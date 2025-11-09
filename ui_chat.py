@@ -59,7 +59,6 @@ p.subtitle {
     margin-left: auto;
     box-shadow: 0 2px 8px rgba(0,0,0,0.25);
 }
-
 .chat-bubble-assistant {
     background: #f8f9fa;
     color: #0f5132;
@@ -96,16 +95,16 @@ p.subtitle {
     cursor: pointer;
 }
 
-/* 🔴 Tombol di Sidebar: “Mulai Chat Baru” — satu definisi final */
-[data-testid="stSidebar"] button[kind="primary"] {
+/* 🔴 Semua tombol di sidebar */
+[data-testid="stSidebar"] button {
     background-color: #ffffff !important; /* putih */
     color: #c1121f !important; /* teks merah */
     font-weight: bold !important;
     border-radius: 10px !important;
     border: 2px solid #c1121f !important; /* garis merah */
-    transition: 0.3s !important;
+    transition: all 0.3s ease !important;
 }
-[data-testid="stSidebar"] button[kind="primary"]:hover {
+[data-testid="stSidebar"] button:hover {
     background-color: #c1121f !important; /* latar merah saat hover */
     color: #ffffff !important; /* teks putih saat hover */
     border: 2px solid #c1121f !important;
@@ -128,11 +127,8 @@ if "viewing_history_index" not in st.session_state:
 # ================================
 with st.sidebar:
     if st.button("🆕 Mulai Chat Baru", use_container_width=True):
-        # 💾 Simpan seluruh sesi chat sebelumnya ke riwayat satu kali
         if st.session_state.messages and st.session_state.viewing_history_index is None:
             st.session_state.chat_history.append(st.session_state.messages.copy())
-
-        # Reset ke sesi baru
         st.session_state.messages = []
         st.session_state.pending_prompt = None
         st.session_state.viewing_history_index = None
@@ -179,11 +175,9 @@ with chat_box:
 # ================================
 if st.session_state.viewing_history_index is None:
     prompt = st.chat_input("💬 Ketik pertanyaan hukum Anda di sini...")
-
     if prompt:
         tz = pytz.timezone("Asia/Jakarta")
         current_time = datetime.datetime.now(tz).strftime("%H:%M:%S")
-
         st.session_state.messages.append({
             "role": "user",
             "text": prompt,
