@@ -95,19 +95,23 @@ p.subtitle {
     background-color: rgba(255,255,255,0.8);
     cursor: pointer;
 }
+
+/* 🔴 Tombol Chat Baru — Kontras */
 .chat-new-btn {
     display: block;
-    background-color: #0f5132;
-    color: white;
+    background-color: #c1121f; /* merah tua */
+    color: #000000; /* teks hitam */
     border-radius: 10px;
     padding: 10px 0;
     text-align: center;
     font-weight: bold;
     margin-top: 10px;
     text-decoration: none;
+    transition: 0.2s;
 }
 .chat-new-btn:hover {
-    background-color: #145a32;
+    background-color: #ffffff; /* putih saat hover */
+    color: #000000; /* tetap hitam */
 }
 </style>
 """, unsafe_allow_html=True)
@@ -126,10 +130,8 @@ if "viewing_history_index" not in st.session_state:
 # 🌿 SIDEBAR — RIWAYAT CHAT
 # ================================
 with st.sidebar:
-    st.markdown("<div class='sidebar-header'>📜 Riwayat Chat</div>", unsafe_allow_html=True)
-
+    # Tombol chat baru
     if st.button("🆕 Mulai Chat Baru", use_container_width=True):
-        # simpan sesi saat ini ke riwayat jika ada isi
         if st.session_state.messages:
             st.session_state.chat_history.append(st.session_state.messages.copy())
         st.session_state.messages = []
@@ -137,13 +139,15 @@ with st.sidebar:
         st.session_state.viewing_history_index = None
         st.rerun()
 
-    # tampilkan daftar riwayat chat
+    # 🔽 Tambahkan teks "Riwayat Chat" di bawah tombol
+    st.markdown("<div class='sidebar-header'>📜 Riwayat Chat</div>", unsafe_allow_html=True)
+
+    # Daftar riwayat chat
     if st.session_state.chat_history:
         for i, chat in enumerate(reversed(st.session_state.chat_history), 1):
             first_msg = next((m["text"] for m in chat if m["role"] == "user"), "(tanpa isi)")
             short_preview = (first_msg[:60] + "...") if len(first_msg) > 60 else first_msg
             if st.button(f"💬 {short_preview}", use_container_width=True, key=f"hist_{i}"):
-                # ketika diklik, tampilkan chat itu
                 st.session_state.messages = chat.copy()
                 st.session_state.viewing_history_index = len(st.session_state.chat_history) - i
                 st.session_state.pending_prompt = None
@@ -176,11 +180,9 @@ with chat_box:
 # ================================
 # 💬 INPUT CHAT
 # ================================
-# hanya aktif jika tidak sedang melihat riwayat lama
 if st.session_state.viewing_history_index is None:
     prompt = st.chat_input("💬 Ketik pertanyaan hukum Anda di sini...")
 
-    # Langsung tampilkan prompt user tanpa menunggu model
     if prompt:
         tz = pytz.timezone("Asia/Jakarta")
         current_time = datetime.datetime.now(tz).strftime("%H:%M:%S")
@@ -193,7 +195,6 @@ if st.session_state.viewing_history_index is None:
         st.session_state.pending_prompt = prompt
         st.rerun()
 
-    # Jalankan Agentic RAG di background setelah prompt tampil
     if st.session_state.pending_prompt:
         with st.spinner("🔍 Sedang menganalisis dengan Agentic RAG..."):
             try:
