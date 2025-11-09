@@ -152,8 +152,9 @@ with st.sidebar:
 # 🌿 HEADER
 # ================================
 st.markdown("""
-<h2>🤖 Chatbot UU Cipta Kerja (Agentic RAG)</h2>
-<p class='subtitle'>Tanyakan apa pun seputar <b>UU No. 11 Tahun 2020</b> tentang Cipta Kerja</p>
+<h2>🤖 Chatbot UU Cipta Kerja (Agentic RAG with Langchain)</h2>
+<p class='subtitle'>Tanyakan apa pun seputar <b>UU No. 11 Tahun 2020</b> tentang Cipta Kerja.</p>
+<p class='subtitle'>Chatbot ini dibuat oleh SUHARDI untuk memenuhi tugas akhir pembelajaran model bahasa besar (large language model).</b> tentang Cipta Kerja</p>
 """, unsafe_allow_html=True)
 
 # ================================
@@ -174,7 +175,7 @@ with chat_box:
 # 💬 INPUT CHAT
 # ================================
 if st.session_state.viewing_history_index is None:
-    prompt = st.chat_input("💬 Ketik pertanyaan hukum Anda di sini...")
+    prompt = st.chat_input("💬 Tuliskan pertanyaan Anda seputar UU Cipta Kerja No. 11 Tahun 2020 pada kolom ini...")
     if prompt:
         tz = pytz.timezone("Asia/Jakarta")
         current_time = datetime.datetime.now(tz).strftime("%H:%M:%S")
